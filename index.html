@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification des pseudos Minecraft</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #result {
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        .available {
+            color: green;
+        }
+        .unavailable {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vérification des pseudos Minecraft</h1>
+    <p>Ce script teste les pseudos Minecraft en incluant lettres, chiffres et underscores.</p>
+    <button id="startBtn">Démarrer la vérification</button>
+    <div id="result"></div>
+
+    <script>
+        async function checkUsername(username) {
+            const response = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`);
+            return response.status === 404; // 404 = pseudo libre
+        }
+
+        async function testUsernames() {
+            const resultDiv = document.getElementById('result');
+            const startBtn = document.getElementById('startBtn');
+            startBtn.disabled = true;
+            resultDiv.innerHTML = "<p>Vérification en cours...</p>";
+
+            const charset = 'abcdefghijklmnopqrstuvwxyz0123456789_';
+            const maxLength = 3; // Modifie cette valeur pour tester des pseudos plus longs
+
+            let freeUsernames = [];
+            let totalChecked = 0;
+
+            function* generateUsernames(maxLength) {
+                function helper(prefix, length) {
+                    if (length === 0) {
+                        yield prefix;
+                        return;
+                    }
+                    for (const char of charset) {
+                        yield* helper(prefix + char, length - 1);
+                    }
+                }
+                for (let i = 3; i <= maxLength; i++) { // Minecraft exige au moins 3 caractères
+                    yield* helper('', i);
+                }
+            }
+
+            const generator = generateUsernames(maxLength);
+
+            for (let username of generator) {
+                const isFree = await checkUsername(username);
+                totalChecked++;
+                if (isFree) {
+                    freeUsernames.push(username);
+                    resultDiv.innerHTML += `<p class="available">${username} est disponible</p>`;
+                } else {
+                    resultDiv.innerHTML += `<p class="unavailable">${username} est pris</p>`;
+                }
+
+                if (totalChecked % 50 === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Pause pour éviter de surcharger l'API
+                }
+            }
+
+            resultDiv.innerHTML += `<h3>Vérification terminée !</h3>`;
+            resultDiv.innerHTML += `<p>${freeUsernames.length} pseudos disponibles trouvés.</p>`;
+            resultDiv.innerHTML += `<p>Pseudos libres : ${freeUsernames.join(', ')}</p>`;
+            startBtn.disabled = false;
+        }
+
+        document.getElementById('startBtn').addEventListener('click', testUsernames);
+    </script>
+</body>
+</html>
