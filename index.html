@@ -8,28 +8,73 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            margin: 20px;
+            background-color: #f3f4f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #2563eb;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
         }
         #result {
             margin-top: 20px;
             max-height: 400px;
             overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
+            border: 1px solid #ddd;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .status {
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: bold;
         }
         .available {
-            color: green;
+            color: #16a34a;
         }
         .unavailable {
-            color: red;
+            color: #dc2626;
+        }
+        .loading {
+            font-size: 16px;
+            color: #2563eb;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        footer {
+            margin-top: 40px;
+            font-size: 12px;
+            color: #6b7280;
         }
     </style>
 </head>
 <body>
     <h1>Vérification des pseudos Minecraft</h1>
-    <p>Ce script teste les pseudos Minecraft en incluant lettres, chiffres et underscores.</p>
+    <p>Ce script vérifie les pseudos Minecraft disponibles avec lettres, chiffres, et underscores.</p>
     <button id="startBtn">Démarrer la vérification</button>
+    <div id="status" class="status"></div>
     <div id="result"></div>
+    <footer>Script éducatif - Attention aux limites de l'API Mojang.</footer>
 
     <script>
         async function checkUsername(username) {
@@ -39,12 +84,14 @@
 
         async function testUsernames() {
             const resultDiv = document.getElementById('result');
+            const statusDiv = document.getElementById('status');
             const startBtn = document.getElementById('startBtn');
             startBtn.disabled = true;
-            resultDiv.innerHTML = "<p>Vérification en cours...</p>";
+            resultDiv.innerHTML = "";
+            statusDiv.textContent = "Préparation...";
 
             const charset = 'abcdefghijklmnopqrstuvwxyz0123456789_';
-            const maxLength = 3; // Modifie cette valeur pour tester des pseudos plus longs
+            const maxLength = 3; // Change cette valeur pour tester des pseudos plus longs
 
             let freeUsernames = [];
             let totalChecked = 0;
@@ -67,6 +114,7 @@
             const generator = generateUsernames(maxLength);
 
             for (let username of generator) {
+                statusDiv.textContent = `Test du pseudo : "${username}" (${totalChecked} pseudos testés)`;
                 const isFree = await checkUsername(username);
                 totalChecked++;
                 if (isFree) {
@@ -81,9 +129,9 @@
                 }
             }
 
-            resultDiv.innerHTML += `<h3>Vérification terminée !</h3>`;
-            resultDiv.innerHTML += `<p>${freeUsernames.length} pseudos disponibles trouvés.</p>`;
-            resultDiv.innerHTML += `<p>Pseudos libres : ${freeUsernames.join(', ')}</p>`;
+            statusDiv.textContent = "Vérification terminée !";
+            resultDiv.innerHTML += `<h3>${freeUsernames.length} pseudos libres trouvés :</h3>`;
+            resultDiv.innerHTML += `<p>${freeUsernames.join(', ') || "Aucun pseudo disponible."}</p>`;
             startBtn.disabled = false;
         }
 
